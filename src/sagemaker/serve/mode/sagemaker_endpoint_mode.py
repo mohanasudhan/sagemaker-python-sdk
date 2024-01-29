@@ -98,9 +98,9 @@ class SageMakerEndpointMode(
             return self._upload_fastapi_artifacts(
                 model_path=model_path,
                 sagemaker_session=sagemaker_session,
+                secret_key=secret_key,
                 s3_model_data_url=s3_model_data_url,
                 image=image,
-                jumpstart=jumpstart,
             )
 
         raise ValueError("%s model server is not supported" % self.model_server)

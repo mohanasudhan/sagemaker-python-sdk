@@ -40,20 +40,32 @@ class TorchServeLocalPredictor(PredictorBase):
                 )
             )
         )
+    
+class FastAPILocalPredictor(PredictorBase):
+    """Lightweight predictor for local deployment in IN_PROCESS and LOCAL_CONTAINER modes"""
 
-    @property
-    def content_type(self):
-        """The MIME type of the data sent to the inference endpoint."""
-        return self.serializer.CONTENT_TYPE
+    # TODO: change mode_obj to union of IN_PROCESS and LOCAL_CONTAINER objs
+    def __init__(
+        self,
+        mode_obj: Type[LocalContainerMode],
+        serializer=IdentitySerializer(),
+        deserializer=BytesDeserializer(),
+    ):
+        self._mode_obj = mode_obj
+        self.serializer = serializer
+        self.deserializer = deserializer
 
-    @property
-    def accept(self):
-        """The content type(s) that are expected from the inference endpoint."""
-        return self.deserializer.ACCEPT
-
-    def delete_predictor(self):
-        """Shut down and remove the container that you created in LOCAL_CONTAINER mode"""
-        self._mode_obj.destroy_server()
+    def predict(self, data):
+        """Placeholder docstring"""
+        return self.deserializer.deserialize(
+            io.BytesIO(
+                self._mode_obj._invoke_fast_api(
+                    self.serializer.serialize(data),
+                    self.content_type,
+                    self.accept[0],
+                )
+            )
+        )
 
 
 class TritonLocalPredictor(PredictorBase):
@@ -178,6 +190,10 @@ def _get_local_mode_predictor(
         )
     if model_server == ModelServer.TRITON:
         return TritonLocalPredictor(mode_obj=mode_obj)
+    if model_server == ModelServer.FASTAPI:
+        return FastAPILocalPredictor(
+            mode_obj=mode_obj, serializer=serializer, deserializer=deserializer
+        )
 
     raise ValueError("%s model server is not supported yet!" % model_server)
 
@@ -197,7 +213,7 @@ def retrieve_predictor(
         serializer = TritonSerializer(input_serializer=schema_builder.input_serializer, dtype=dtype)
         deserializer = JSONDeserializer()
 
-    elif model_server == ModelServer.TORCHSERVE:
+    elif model_server == ModelServer.TORCHSERVE or model_server == ModelServer.FASTAPI:
         serializer = (
             schema_builder.custom_input_translator
             if hasattr(schema_builder, "custom_input_translator")

@@ -19,6 +19,7 @@ from sagemaker.serve.model_server.torchserve.server import LocalTorchServe
 from sagemaker.serve.model_server.djl_serving.server import LocalDJLServing
 from sagemaker.serve.model_server.triton.server import LocalTritonServer
 from sagemaker.serve.model_server.tgi.server import LocalTgiServing
+from sagemaker.serve.model_server.fastapi.server import LocalFastApi
 from sagemaker.session import Session
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ _PING_HEALTH_CHECK_FAIL_MSG = (
 )
 
 
-class LocalContainerMode(LocalTorchServe, LocalDJLServing, LocalTritonServer, LocalTgiServing):
+class LocalContainerMode(LocalTorchServe, LocalDJLServing, LocalTritonServer, LocalTgiServing, LocalFastApi):
     """A class that holds methods to deploy model to a container in local environment"""
 
     def __init__(
