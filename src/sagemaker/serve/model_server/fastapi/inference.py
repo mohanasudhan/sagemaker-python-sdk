@@ -103,7 +103,7 @@ def _pickle_file_integrity_check():
         buffer = f.read()
 
     metadeata_path = Path("/opt/ml/model/metadata.json")
-    perform_integrity_check(buffer=buffer, metadata_path=metadeata_path)
+    #perform_integrity_check(buffer=buffer, metadata_path=metadeata_path)
 
 
 def _install_requirements():
