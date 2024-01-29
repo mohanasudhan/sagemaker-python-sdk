@@ -36,6 +36,9 @@ logger = logging.getLogger(__name__)
 
 class FastAPIServe(ABC):
 
+    def __init__(self):
+        self.pysdk_model = None
+
     @abstractmethod
     def _prepare_for_mode(self):
         """Placeholder docstring"""
