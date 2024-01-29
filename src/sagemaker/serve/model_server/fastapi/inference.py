@@ -52,15 +52,13 @@ def load():
         else:
             native_model, schema_builder = obj
 
-            from langchain.load.dump import dumps, dumpd
+            from langchain.load.dump import dumpd
+            from langchain.load.load import loads
+
             native_model = dumpd(native_model)
+            native_model = loads(native_model)
 
     if native_model:
-        framework, _ = _detect_framework_and_version(
-            model_base=str(_get_model_base(model=native_model))
-        )
-        if framework == "pytorch":
-            native_model.eval()
         predict_callable = native_model if callable(native_model) else native_model.predict
     elif inference_spec:
         predict_callable = partial(inference_spec.invoke, model=inference_spec.load(model_dir))
