@@ -12,12 +12,13 @@ from sagemaker.serve.model_server.triton.server import SageMakerTritonServer
 from sagemaker.serve.model_server.torchserve.server import SageMakerTorchServe
 from sagemaker.serve.model_server.djl_serving.server import SageMakerDjlServing
 from sagemaker.serve.model_server.tgi.server import SageMakerTgiServing
+from sagemaker.serve.model_server.fastapi.server import SageMakerFastApi
 
 logger = logging.getLogger(__name__)
 
 
 class SageMakerEndpointMode(
-    SageMakerTorchServe, SageMakerTritonServer, SageMakerDjlServing, SageMakerTgiServing
+    SageMakerTorchServe, SageMakerTritonServer, SageMakerDjlServing, SageMakerTgiServing, SageMakerFastApi
 ):
     """Holds the required method to deploy a model to a SageMaker Endpoint"""
 
@@ -86,6 +87,15 @@ class SageMakerEndpointMode(
 
         if self.model_server == ModelServer.TGI:
             return self._upload_tgi_artifacts(
+                model_path=model_path,
+                sagemaker_session=sagemaker_session,
+                s3_model_data_url=s3_model_data_url,
+                image=image,
+                jumpstart=jumpstart,
+            )
+        
+        if self.model_server == ModelServer.FASTAPI:
+            return self._upload_fastapi_artifacts(
                 model_path=model_path,
                 sagemaker_session=sagemaker_session,
                 s3_model_data_url=s3_model_data_url,
