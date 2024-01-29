@@ -130,7 +130,7 @@ class LocalContainerMode(LocalTorchServe, LocalDJLServing, LocalTritonServer, Lo
             )
             self._ping_container = self._tgi_deep_ping
         elif self.model_server == ModelServer.FASTAPI:
-            self._start_fastapi(
+            self._start_fast_api(
                 client=self.client,
                 image=image,
                 model_path=model_path if model_path else self.model_path,
