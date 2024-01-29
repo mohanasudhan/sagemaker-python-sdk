@@ -234,7 +234,7 @@ class ModelBuilder(FastAPIServe, Triton, DJL, JumpStart, TGI):
                 % (self.model_server, supported_model_server)
             )
 
-    def _save_model_inference_spec(self):
+    def _fast_api_save_model_inference_spec(self):
         """Placeholder docstring"""
         # check if path exists and create if not
         if not os.path.exists(self.model_path):
@@ -305,7 +305,7 @@ class ModelBuilder(FastAPIServe, Triton, DJL, JumpStart, TGI):
             sagemaker_session=self.sagemaker_session,
         )
 
-    def _prepare_for_mode(self):
+    def _fast_api_prepare_for_mode(self):
         """Placeholder docstring"""
         # TODO: move mode specific prepare steps under _model_builder_deploy_wrapper
         self.s3_upload_path = None
@@ -382,7 +382,7 @@ class ModelBuilder(FastAPIServe, Triton, DJL, JumpStart, TGI):
             deserializer=deserializer,
         )
 
-    def _create_model(self):
+    def _fast_api_create_model(self):
         """Placeholder docstring"""
         # TODO: we should create model as per the framework
         self.pysdk_model = Model(
@@ -403,14 +403,14 @@ class ModelBuilder(FastAPIServe, Triton, DJL, JumpStart, TGI):
         # dynamically generate a method to direct model.deploy() logic based on mode
         # unique method to models created via ModelBuilder()
         self._original_deploy = self.pysdk_model.deploy
-        self.pysdk_model.deploy = self._model_builder_deploy_wrapper
+        self.pysdk_model.deploy = self._fast_api_model_builder_deploy_wrapper
         self._original_register = self.pysdk_model.register
-        self.pysdk_model.register = self._model_builder_register_wrapper
+        self.pysdk_model.register = self._fast_api_model_builder_register_wrapper
         self.model_package = None
         return self.pysdk_model
 
     @_capture_telemetry("register")
-    def _model_builder_register_wrapper(self, *args, **kwargs):
+    def _fast_api_model_builder_register_wrapper(self, *args, **kwargs):
         """Placeholder docstring"""
         serializer, deserializer = self._get_client_translators()
         if "content_types" not in kwargs:
@@ -419,24 +419,24 @@ class ModelBuilder(FastAPIServe, Triton, DJL, JumpStart, TGI):
             self.pysdk_model.response_types = deserializer.ACCEPT.split()
         new_model_package = self._original_register(*args, **kwargs)
         self.pysdk_model.model_package_arn = new_model_package.model_package_arn
-        new_model_package.deploy = self._model_builder_deploy_model_package_wrapper
+        new_model_package.deploy = self._fast_api_model_builder_deploy_model_package_wrapper
         self.model_package = new_model_package
         return new_model_package
 
-    def _model_builder_deploy_model_package_wrapper(self, *args, **kwargs):
+    def _fast_api_model_builder_deploy_model_package_wrapper(self, *args, **kwargs):
         """Placeholder docstring"""
         if self.pysdk_model.model_package_arn is not None:
-            return self._model_builder_deploy_wrapper(*args, **kwargs)
+            return self._fast_api_model_builder_deploy_wrapper(*args, **kwargs)
 
         # need to set the model_package_arn
         # so that the model is created using the model_package's configs
         self.pysdk_model.model_package_arn = self.model_package.model_package_arn
-        predictor = self._model_builder_deploy_wrapper(*args, **kwargs)
+        predictor = self._fast_api_model_builder_deploy_wrapper(*args, **kwargs)
         self.pysdk_model.model_package_arn = None
         return predictor
 
     @_capture_telemetry("torchserve.deploy")
-    def _model_builder_deploy_wrapper(
+    def _fast_api_model_builder_deploy_wrapper(
         self,
         *args,
         container_timeout_in_second: int = 300,
@@ -447,7 +447,7 @@ class ModelBuilder(FastAPIServe, Triton, DJL, JumpStart, TGI):
     ) -> Type[PredictorBase]:
         """Placeholder docstring"""
         if mode and mode != self.mode:
-            self._overwrite_mode_in_deploy(overwrite_mode=mode)
+            self._fast_api_overwrite_mode_in_deploy(overwrite_mode=mode)
 
         if self.mode == Mode.LOCAL_CONTAINER:
             serializer, deserializer = self._get_client_translators()
@@ -486,7 +486,7 @@ class ModelBuilder(FastAPIServe, Triton, DJL, JumpStart, TGI):
             **kwargs,
         )
 
-    def _overwrite_mode_in_deploy(self, overwrite_mode: str):
+    def _fast_api_overwrite_mode_in_deploy(self, overwrite_mode: str):
         """Mode overwritten by customer during model.deploy()"""
         logger.warning(
             "Deploying in %s Mode, overriding existing configurations set for %s mode",
@@ -495,19 +495,19 @@ class ModelBuilder(FastAPIServe, Triton, DJL, JumpStart, TGI):
         )
         if overwrite_mode == Mode.SAGEMAKER_ENDPOINT:
             self.mode = self.pysdk_model.mode = Mode.SAGEMAKER_ENDPOINT
-            s3_upload_path, env_vars_sagemaker = self._prepare_for_mode()
+            s3_upload_path, env_vars_sagemaker = self._fast_api_prepare_for_mode()
             self.pysdk_model.model_data = s3_upload_path
             self.pysdk_model.env.update(env_vars_sagemaker)
 
         elif overwrite_mode == Mode.LOCAL_CONTAINER:
             self.mode = self.pysdk_model.mode = Mode.LOCAL_CONTAINER
-            self._prepare_for_mode()
+            self._fast_api_prepare_for_mode()
         else:
             raise ValueError("Mode %s is not supported!" % overwrite_mode)
 
     def _build_for_torchserve(self) -> Type[Model]:
         """Build the model for torchserve"""
-        self._save_model_inference_spec()
+        self._fast_api_save_model_inference_spec()
 
         self._auto_detect_container()
 
@@ -520,9 +520,9 @@ class ModelBuilder(FastAPIServe, Triton, DJL, JumpStart, TGI):
             inference_spec=self.inference_spec,
         )
 
-        self._prepare_for_mode()
+        self._fast_api_prepare_for_mode()
 
-        return self._create_model()
+        return self._fast_api_create_model()
 
     def _user_agent_decorator(self, func):
         """Placeholder docstring"""
@@ -588,8 +588,9 @@ class ModelBuilder(FastAPIServe, Triton, DJL, JumpStart, TGI):
 
         self._build_validations()
 
-        langchain = "LLMChain"
-        if isinstance(self.model, globals()[langchain]):
+        llmc = "LLMChain"
+        if self.model and self.model.__class__.__name__ == llmc:
+            self.model_server = ModelServer.FASTAPI
             return self._build_for_fastapi()
 
         if self.model_server == ModelServer.TORCHSERVE:

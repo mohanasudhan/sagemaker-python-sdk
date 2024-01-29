@@ -215,6 +215,14 @@ def _detect_framework_and_version(model_base: str) -> Tuple[str, str]:
             vs = tensorflow.__version__
         except ImportError:
             logger.warning(_VERSION_DETECTION_ERROR, fw)
+    elif "chain" in model_base:
+        fw = "langchain"
+        try:
+            import langchain
+
+            vs = langchain.__version__
+        except ImportError:
+            logger.warning(_VERSION_DETECTION_ERROR, fw)
 
     else:
         raise Exception(
