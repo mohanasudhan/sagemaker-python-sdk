@@ -33,6 +33,7 @@ from sagemaker.serve.detector.pickler import save_pkl, save_xgboost
 from sagemaker.serve.builder.serve_settings import _ServeSettings
 from sagemaker.serve.builder.djl_builder import DJL
 from sagemaker.serve.builder.tgi_builder import TGI
+from sagemaker.serve.builder.fastapi_builder import FastAPIServe
 from sagemaker.serve.builder.jumpstart_builder import JumpStart
 from sagemaker.predictor import Predictor
 from sagemaker.serve.save_retrive.version_1_0_0.metadata.metadata import Metadata
@@ -60,12 +61,13 @@ supported_model_server = {
     ModelServer.TORCHSERVE,
     ModelServer.TRITON,
     ModelServer.DJL_SERVING,
+    ModelServer.FASTAPI
 }
 
 
 # pylint: disable=attribute-defined-outside-init
 @dataclass
-class ModelBuilder(Triton, DJL, JumpStart, TGI):
+class ModelBuilder(FastAPIServe, Triton, DJL, JumpStart, TGI):
     """Class that builds a deployable model.
 
     Args:
@@ -585,6 +587,10 @@ class ModelBuilder(Triton, DJL, JumpStart, TGI):
             return self._build_for_tgi()
 
         self._build_validations()
+
+        langchain = "LLMChain"
+        if isinstance(self.model, globals()[langchain]):
+            return self._build_for_fastapi()
 
         if self.model_server == ModelServer.TORCHSERVE:
             return self._build_for_torchserve()
