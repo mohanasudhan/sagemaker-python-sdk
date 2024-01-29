@@ -31,7 +31,6 @@ from sagemaker.serve.validations.check_image_and_hardware_type import (
     validate_image_uri_and_hardware,
 )
 from sagemaker.model import Model
-import cloudpickle
 
 logger = logging.getLogger(__name__)
 
@@ -87,8 +86,14 @@ class FastAPIServe(ABC):
                 }
             )
             self.image_uri = "027412998179.dkr.ecr.us-west-2.amazonaws.com/langchain-serve-container:latest"
-            cloudpickle.register(ssl.SSLContext, lambda _: None)
-            save_pkl(code_path, (self.model, self.schema_builder))
+
+            llmc = "LLMChain"
+            if self.model and self.model.__class__.__name__ == llmc:
+                from langchain.load.dump import dumps
+
+                save_pkl(code_path, (dumps(self.model), self.schema_builder))
+            else:
+                save_pkl(code_path, (self.model, self.schema_builder))
         else:
             raise ValueError("Cannot detect required model or inference spec")
         

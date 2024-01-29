@@ -49,15 +49,12 @@ def load():
         obj = cloudpickle.load(file)
         if isinstance(obj[0], InferenceSpec):
             inference_spec, schema_builder = obj
-        elif isinstance(obj[0], str) and obj[0] == "xgboost":
-            model_class_name = os.getenv("MODEL_CLASS_NAME")
-            model_save_path = Path(__file__).parent.joinpath("model.json")
-            native_model = load_xgboost_from_json(
-                model_save_path=str(model_save_path), class_name=model_class_name
-            )
-            schema_builder = obj[1]
         else:
             native_model, schema_builder = obj
+
+            from langchain.load.dump import dumps, dumpd
+            native_model = dumpd(native_model)
+
     if native_model:
         framework, _ = _detect_framework_and_version(
             model_base=str(_get_model_base(model=native_model))
