@@ -31,6 +31,7 @@ from sagemaker.serve.validations.check_image_and_hardware_type import (
     validate_image_uri_and_hardware,
 )
 from sagemaker.model import Model
+import cloudpickle
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ class FastAPIServe(ABC):
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
 
-        code_path = Path(self.model_path).joinpath("code")
+        code_path = Path(self.model_path)
         # save the model or inference spec in cloud pickle format
         if self.inference_spec:
             save_pkl(code_path, (self.inference_spec, self.schema_builder))
@@ -86,6 +87,7 @@ class FastAPIServe(ABC):
                 }
             )
             self.image_uri = "027412998179.dkr.ecr.us-west-2.amazonaws.com/langchain-serve-container:latest"
+            cloudpickle.register(ssl.SSLContext, lambda _: None)
             save_pkl(code_path, (self.model, self.schema_builder))
         else:
             raise ValueError("Cannot detect required model or inference spec")
