@@ -41,6 +41,21 @@ class TorchServeLocalPredictor(PredictorBase):
             )
         )
     
+    @property
+    def content_type(self):
+        """The MIME type of the data sent to the inference endpoint."""
+        return self.serializer.CONTENT_TYPE
+
+    @property
+    def accept(self):
+        """The content type(s) that are expected from the inference endpoint."""
+        return self.deserializer.ACCEPT
+
+    def delete_predictor(self):
+        """Shut down and remove the container that you created in LOCAL_CONTAINER mode"""
+        self._mode_obj.destroy_server()
+
+    
 class FastAPILocalPredictor(PredictorBase):
     """Lightweight predictor for local deployment in IN_PROCESS and LOCAL_CONTAINER modes"""
 
@@ -66,6 +81,20 @@ class FastAPILocalPredictor(PredictorBase):
                 )
             )
         )
+    
+    @property
+    def content_type(self):
+        """The MIME type of the data sent to the inference endpoint."""
+        return self.serializer.CONTENT_TYPE
+
+    @property
+    def accept(self):
+        """The content type(s) that are expected from the inference endpoint."""
+        return self.deserializer.ACCEPT
+
+    def delete_predictor(self):
+        """Shut down and remove the container that you created in LOCAL_CONTAINER mode"""
+        self._mode_obj.destroy_server()
 
 
 class TritonLocalPredictor(PredictorBase):
