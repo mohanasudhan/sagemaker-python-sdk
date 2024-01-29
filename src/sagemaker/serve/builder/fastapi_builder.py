@@ -37,7 +37,28 @@ logger = logging.getLogger(__name__)
 class FastAPIServe(ABC):
 
     def __init__(self):
+        self.model = None
+        self.serve_settings = None
+        self.sagemaker_session = None
+        self.model_path = None
+        self.dependencies = None
+        self.modes = None
+        self.mode = None
+        self.model_server = None
+        self.image_uri = None
+        self._original_deploy = None
+        self.hf_model_config = None
+        self._default_tensor_parallel_degree = None
+        self._default_data_type = None
+        self._default_max_tokens = None
         self.pysdk_model = None
+        self.schema_builder = None
+        self.env_vars = None
+        self.nb_instance_type = None
+        self.ram_usage_model_load = None
+        self.secret_key = None
+        self.jumpstart = None
+        self.role_arn = None
 
     @abstractmethod
     def _prepare_for_mode(self):
