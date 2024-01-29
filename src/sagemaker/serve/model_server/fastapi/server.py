@@ -22,25 +22,32 @@ class LocalFastApi:
     def _start_fast_api(
         self, client: object, image: str, model_path: str, secret_key: str, env_vars: dict
     ):
-        """Placeholder docstring"""
-        self.container = client.containers.run(
-            image,
-            detach=True,
-            auto_remove=True,
-            network_mode="host",
-            volumes={
-                Path(model_path): {
-                    "bind": "/opt/ml/model",
-                    "mode": "rw",
+        logger.info(f"image: {image} model_path: {model_path} secret_key: {secret_key} env_vars: {env_vars}")
+
+        try:
+            """Placeholder docstring"""
+            self.container = client.containers.run(
+                image,
+                detach=True,
+                auto_remove=True,
+                network_mode="host",
+                volumes={
+                    Path(model_path): {
+                        "bind": "/opt/ml/model",
+                        "mode": "rw",
+                    },
                 },
-            },
-            environment={
-                "SAGEMAKER_PROGRAM": "inference.py",
-                "SAGEMAKER_SERVE_SECRET_KEY": secret_key,
-                "LOCAL_PYTHON": platform.python_version(),
-                **env_vars,
-            },
-        )
+                environment={
+                    "SAGEMAKER_PROGRAM": "inference.py",
+                    "SAGEMAKER_SERVE_SECRET_KEY": secret_key,
+                    "LOCAL_PYTHON": platform.python_version(),
+                    **env_vars,
+                },
+            )
+        except Exception as e:
+            raise Exception("Unable to start the local container server") from e
+        
+        logger.info(f"container: {self.container}")
 
     def _invoke_fast_api(self, request: object, content_type: str, accept: str):
         """Placeholder docstring"""
