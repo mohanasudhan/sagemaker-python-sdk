@@ -129,6 +129,15 @@ class LocalContainerMode(LocalTorchServe, LocalDJLServing, LocalTritonServer, Lo
                 jumpstart=jumpstart,
             )
             self._ping_container = self._tgi_deep_ping
+        elif self.model_server == ModelServer.FASTAPI:
+            self._start_fastapi(
+                client=self.client,
+                image=image,
+                model_path=model_path if model_path else self.model_path,
+                secret_key=secret_key,
+                env_vars=env_vars if env_vars else self.env_vars,
+            )
+            self._ping_container = self._fastapi_deep_ping
 
         # allow some time for container to be ready
         time.sleep(10)
