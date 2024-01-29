@@ -28,6 +28,7 @@ class LocalFastApi:
             """Placeholder docstring"""
             self.container = client.containers.run(
                 image,
+                "serve",
                 detach=True,
                 auto_remove=True,
                 network_mode="host",
