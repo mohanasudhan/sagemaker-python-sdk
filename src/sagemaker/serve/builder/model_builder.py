@@ -588,8 +588,9 @@ class ModelBuilder(Triton, DJL, JumpStart, TGI, FastAPIServe):
 
         self._build_validations()
 
-        llmc = "LLMChain"
-        if self.model and self.model.__class__.__name__ == llmc:
+        from langchain_core.runnables import RunnableSerializable
+
+        if self.model and isinstance(self.model, RunnableSerializable):
             self.model_server = ModelServer.FASTAPI
             return self._build_for_fastapi()
 
