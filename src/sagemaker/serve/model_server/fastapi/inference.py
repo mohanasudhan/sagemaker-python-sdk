@@ -59,7 +59,7 @@ def load():
             native_model = loads(native_model)
 
     if native_model:
-        predict_callable = native_model if callable(native_model) else native_model.predict
+        predict_callable = native_model if callable(native_model) else native_model.invoke
     elif inference_spec:
         predict_callable = partial(inference_spec.invoke, model=inference_spec.load(model_dir))
     
@@ -70,11 +70,17 @@ def load():
 
 @app.post('/invocations')
 async def invocations(request: Request):
-    request_body = await request.body()
-
-    logger.info(f"Invoked with payload {request_body} of size: {len(request_body)}")
- 
-    return predict_callable(request_body)
+    request_json = await request.json()
+    logger.info(f"Invoked with request: {request}")
+    logger.info(f"Invoked with payload {request_json}")
+    try:
+        result = predict_callable(request_json) 
+        logger.info(f"Result of invoke is: {result}")
+    except Exception as e:
+        logger.error(e)
+        raise e
+    
+    return result
 
 @app.on_event('shutdown')
 def shutdown():

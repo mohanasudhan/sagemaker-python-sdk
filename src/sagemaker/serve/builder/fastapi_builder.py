@@ -86,9 +86,10 @@ class FastAPIServe(ABC):
                 }
             )
             self.image_uri = "027412998179.dkr.ecr.us-west-2.amazonaws.com/langchain-serve-container:latest"
+            
+            from langchain_core.runnables import RunnableSerializable
 
-            llmc = "LLMChain"
-            if self.model and self.model.__class__.__name__ == llmc:
+            if self.model and isinstance(self.model, RunnableSerializable):
                 from langchain.load.dump import dumps
 
                 save_pkl(code_path, (dumps(self.model), self.schema_builder))
